@@ -68,27 +68,32 @@ export default function Dashboard() {
   }, [])
 
   const loadVerifications = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('verifications')
-      .select(`
-        id,
-        qr_id,
-        scanned_at,
-        ip_address,
-        user_agent,
-        status,
-        qr_codes (
-          title,
-          client_name
-        )
-      `)
-      .order('scanned_at', { ascending: false })
-      .limit(50)
+  const { data, error } = await supabase
+    .from('verifications')
+    .select(`
+      id,
+      qr_id,
+      scanned_at,
+      ip_address,
+      user_agent,
+      status,
+      qr_codes (
+        title,
+        client_name
+      )
+    `)
+    .order('scanned_at', { ascending: false })
+    .limit(50)
 
-    if (!error && data) {
-      setVerifications(data)
-    }
-  }, [])
+  if (!error && data) {
+    // Pastikan qr_codes adalah object, bukan array
+    const mapped = data.map((v: any) => ({
+      ...v,
+      qr_codes: Array.isArray(v.qr_codes) ? v.qr_codes[0] : v.qr_codes
+    }))
+    setVerifications(mapped)
+  }
+}, [])
 
   const loadStats = useCallback(async () => {
     // Total QR Codes
