@@ -87,7 +87,15 @@ export default function Dashboard() {
 
   if (!error && data) {
     // Pastikan qr_codes adalah object, bukan array
-    const mapped = data.map((v: any) => ({
+    const mapped = data.map((v: {
+      id: string;
+      qr_id: string;
+      scanned_at: string;
+      ip_address: string;
+      user_agent: string;
+      status: string;
+      qr_codes: { title: string; client_name: string } | { title: string; client_name: string }[];
+    }) => ({
       ...v,
       qr_codes: Array.isArray(v.qr_codes) ? v.qr_codes[0] : v.qr_codes
     }))
