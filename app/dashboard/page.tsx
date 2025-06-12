@@ -10,7 +10,7 @@ interface QRCode {
   created_at: string
   is_active: boolean
   verification_count: number
-  verifications: any[]
+  verifications: { count: number }[] // Changed from any[] to specific type
 }
 
 interface Verification {
