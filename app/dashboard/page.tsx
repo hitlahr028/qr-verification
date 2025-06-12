@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
@@ -10,6 +10,7 @@ interface QRCode {
   created_at: string
   is_active: boolean
   verification_count: number
+  verifications: any[]
 }
 
 interface Verification {
@@ -44,26 +45,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'qrcodes' | 'verifications'>('qrcodes')
 
-  useEffect(() => {
-    loadDashboardData()
-  }, [])
-
-  const loadDashboardData = async () => {
-    setLoading(true)
-    try {
-      await Promise.all([
-        loadQRCodes(),
-        loadVerifications(),
-        loadStats()
-      ])
-    } catch (error) {
-      console.error('Error loading dashboard:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const loadQRCodes = async () => {
+  const loadQRCodes = useCallback(async () => {
     const { data, error } = await supabase
       .from('qr_codes')
       .select(`
@@ -83,9 +65,9 @@ export default function Dashboard() {
       }))
       setQrCodes(qrCodesWithCount)
     }
-  }
+  }, [])
 
-  const loadVerifications = async () => {
+  const loadVerifications = useCallback(async () => {
     const { data, error } = await supabase
       .from('verifications')
       .select(`
@@ -106,9 +88,9 @@ export default function Dashboard() {
     if (!error && data) {
       setVerifications(data)
     }
-  }
+  }, [])
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     // Total QR Codes
     const { count: totalQR } = await supabase
       .from('qr_codes')
@@ -139,7 +121,26 @@ export default function Dashboard() {
       todayVerifications: todayVerif || 0,
       activeQRCodes: activeQR || 0
     })
-  }
+  }, [])
+
+  const loadDashboardData = useCallback(async () => {
+    setLoading(true)
+    try {
+      await Promise.all([
+        loadQRCodes(),
+        loadVerifications(),
+        loadStats()
+      ])
+    } catch (error) {
+      console.error('Error loading dashboard:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [loadQRCodes, loadVerifications, loadStats])
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [loadDashboardData])
 
   const toggleQRStatus = async (id: string, currentStatus: boolean) => {
     const { error } = await supabase

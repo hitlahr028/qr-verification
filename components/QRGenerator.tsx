@@ -3,6 +3,7 @@ import { useState } from 'react'
 import QRCode from 'qrcode'
 import { supabase } from '@/lib/supabase'
 import toast, { Toaster } from 'react-hot-toast'
+import Image from 'next/image'
 
 interface QRData {
   title: string
@@ -20,6 +21,7 @@ interface QRData {
 }
 
 export default function QRGenerator() {
+
   const [formData, setFormData] = useState<QRData>({
     title: '',
     clientName: '',
@@ -96,9 +98,13 @@ export default function QRGenerator() {
       setQrCodeUrl(qrCodeDataUrl)
       toast.success('QR Code berhasil dibuat!')
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error generating QR:', error)
-      toast.error('Gagal membuat QR Code: ' + error.message)
+      if (error instanceof Error) {
+        toast.error('Gagal membuat QR Code: ' + error.message)
+      } else {
+        toast.error('Gagal membuat QR Code')
+      }
     } finally {
       setIsGenerating(false)
     }
@@ -137,16 +143,18 @@ export default function QRGenerator() {
       <Toaster position="top-right" />
       
       <div className="bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-          QR Code Generator
-        </h1>
-        <a
+        {/* Header dengan navigation */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">
+            QR Code Generator
+          </h1>
+          <a
             href="/dashboard"
             className="bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 font-medium"
-        >
+          >
             Dashboard
-        </a>
-        
+          </a>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form Input */}
@@ -345,10 +353,12 @@ export default function QRGenerator() {
             {qrCodeUrl ? (
               <div className="text-center">
                 <div className="bg-white p-4 rounded-lg border-2 border-gray-200 mb-4">
-                  <img 
+                  <Image 
                     src={qrCodeUrl} 
                     alt="QR Code" 
-                    className="w-64 h-64 mx-auto"
+                    width={256}
+                    height={256}
+                    className="mx-auto"
                   />
                 </div>
                 
@@ -363,15 +373,16 @@ export default function QRGenerator() {
                   >
                     Download QR Code
                   </button>
-                {generatedId && (
-                  <a
-                    href={`/verify/${generatedId}`}
-                    target="_blank"
-                    className="w-full bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 font-medium inline-block text-center"
-                  >
-                    Test Verification Page
-                  </a>
-                )}
+
+                  {generatedId && (
+                    <a
+                      href={`/verify/${generatedId}`}
+                      target="_blank"
+                      className="w-full bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 font-medium inline-block text-center"
+                    >
+                      Test Verification Page
+                    </a>
+                  )}
                 </div>
               </div>
             ) : (

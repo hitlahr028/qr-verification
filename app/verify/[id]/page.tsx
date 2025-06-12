@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
@@ -35,13 +35,17 @@ export default function VerifyPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (id) {
-      verifyQRCode(id)
+  const getClientIP = async () => {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json')
+      const data = await response.json()
+      return data.ip
+    } catch {
+      return 'unknown'
     }
-  }, [id])
+  }
 
-  const verifyQRCode = async (qrId: string) => {
+  const verifyQRCode = useCallback(async (qrId: string) => {
     try {
       // 1. Ambil data QR dari database
       const { data: qrCode, error: qrError } = await supabase
@@ -73,23 +77,23 @@ export default function VerifyPage() {
         console.error('Error recording verification:', verifyError)
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Verification error:', error)
-      setError(error.message)
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('Terjadi kesalahan tidak dikenal')
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const getClientIP = async () => {
-    try {
-      const response = await fetch('https://api.ipify.org?format=json')
-      const data = await response.json()
-      return data.ip
-    } catch {
-      return 'unknown'
+  useEffect(() => {
+    if (id) {
+      verifyQRCode(id)
     }
-  }
+  }, [id, verifyQRCode])
 
   if (loading) {
     return (
