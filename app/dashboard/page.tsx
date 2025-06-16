@@ -10,7 +10,7 @@ interface QRCode {
   created_at: string
   is_active: boolean
   verification_count: number
-  verifications: { count: number }[] // Changed from any[] to specific type
+  verifications: { count: number }[]
 }
 
 interface Verification {
@@ -68,40 +68,39 @@ export default function Dashboard() {
   }, [])
 
   const loadVerifications = useCallback(async () => {
-  const { data, error } = await supabase
-    .from('verifications')
-    .select(`
-      id,
-      qr_id,
-      scanned_at,
-      ip_address,
-      user_agent,
-      status,
-      qr_codes (
-        title,
-        client_name
-      )
-    `)
-    .order('scanned_at', { ascending: false })
-    .limit(50)
+    const { data, error } = await supabase
+      .from('verifications')
+      .select(`
+        id,
+        qr_id,
+        scanned_at,
+        ip_address,
+        user_agent,
+        status,
+        qr_codes (
+          title,
+          client_name
+        )
+      `)
+      .order('scanned_at', { ascending: false })
+      .limit(50)
 
-  if (!error && data) {
-    // Pastikan qr_codes adalah object, bukan array
-    const mapped = data.map((v: {
-      id: string;
-      qr_id: string;
-      scanned_at: string;
-      ip_address: string;
-      user_agent: string;
-      status: string;
-      qr_codes: { title: string; client_name: string } | { title: string; client_name: string }[];
-    }) => ({
-      ...v,
-      qr_codes: Array.isArray(v.qr_codes) ? v.qr_codes[0] : v.qr_codes
-    }))
-    setVerifications(mapped)
-  }
-}, [])
+    if (!error && data) {
+      const mapped = data.map((v: {
+        id: string;
+        qr_id: string;
+        scanned_at: string;
+        ip_address: string;
+        user_agent: string;
+        status: string;
+        qr_codes: { title: string; client_name: string } | { title: string; client_name: string }[];
+      }) => ({
+        ...v,
+        qr_codes: Array.isArray(v.qr_codes) ? v.qr_codes[0] : v.qr_codes
+      }))
+      setVerifications(mapped)
+    }
+  }, [])
 
   const loadStats = useCallback(async () => {
     // Total QR Codes

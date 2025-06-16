@@ -1,11 +1,10 @@
 'use client'
 import { useState } from 'react'
-import QRCode from 'qrcode'
 import { supabase } from '@/lib/supabase'
-import toast, { Toaster } from 'react-hot-toast'
-import Image from 'next/image'
+import QRCode from 'qrcode'
+import Link from 'next/link'
 
-interface QRData {
+interface FormData {
   title: string
   clientName: string
   vessel: string
@@ -20,65 +19,61 @@ interface QRData {
   calorificValue: string
 }
 
-export default function QRGenerator() {
+const initialFormData: FormData = {
+  title: '',
+  clientName: '',
+  vessel: '',
+  quantity: '',
+  portLoading: '',
+  portDischarging: '',
+  wiNumber: '',
+  certificateNumber: '',
+  commodity: '',
+  ashContent: '',
+  totalSulphur: '',
+  calorificValue: ''
+}
 
-  const [formData, setFormData] = useState<QRData>({
-    title: '',
-    clientName: '',
-    vessel: '',
-    quantity: '',
-    portLoading: '',
-    portDischarging: '',
-    wiNumber: '',
-    certificateNumber: '',
-    commodity: '',
-    ashContent: '',
-    totalSulphur: '',
-    calorificValue: ''
-  })
-  
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>('')
-  const [isGenerating, setIsGenerating] = useState<boolean>(false)
-  const [generatedId, setGeneratedId] = useState<string>('')
+export default function QRGenerator() {
+  const [formData, setFormData] = useState<FormData>(initialFormData)
+  const [qrData, setQrData] = useState<{ id: string; qrCode: string } | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
   }
 
   const generateQRCode = async () => {
     if (!formData.title || !formData.clientName) {
-      toast.error('Title dan Client Name wajib diisi!')
+      alert('Title dan Client Name wajib diisi!')
       return
     }
 
     setIsGenerating(true)
     
     try {
-      // 1. Simpan data ke database dulu
-      const { data: qrData, error: dbError } = await supabase
+      // Simpan data ke Supabase
+      const { data, error } = await supabase
         .from('qr_codes')
         .insert([
           {
             title: formData.title,
             client_name: formData.clientName,
-            data: formData
+            data: formData,
+            is_active: true
           }
         ])
         .select()
         .single()
 
-      if (dbError) throw dbError
+      if (error) throw error
 
-      const qrId = qrData.id
-      setGeneratedId(qrId)
-
-      // 2. Generate QR code dengan URL verifikasi
-      const verificationUrl = `${window.location.origin}/verify/${qrId}`
-      const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
+      // Generate QR Code
+      const qrCodeUrl = `${window.location.origin}/verify/${data.id}`
+      const qrCodeDataUrl = await QRCode.toDataURL(qrCodeUrl, {
         width: 300,
         margin: 2,
         color: {
@@ -87,84 +82,55 @@ export default function QRGenerator() {
         }
       })
 
-      // 3. Update database dengan QR code URL
-      const { error: updateError } = await supabase
-        .from('qr_codes')
-        .update({ qr_code_url: qrCodeDataUrl })
-        .eq('id', qrId)
+      setQrData({
+        id: data.id,
+        qrCode: qrCodeDataUrl
+      })
 
-      if (updateError) throw updateError
-
-      setQrCodeUrl(qrCodeDataUrl)
-      toast.success('QR Code berhasil dibuat!')
-      
-    } catch (error: unknown) {
-      console.error('Error generating QR:', error)
-      if (error instanceof Error) {
-        toast.error('Gagal membuat QR Code: ' + error.message)
-      } else {
-        toast.error('Gagal membuat QR Code')
-      }
+      // Reset form
+      setFormData(initialFormData)
+    } catch (error) {
+      console.error('Error generating QR code:', error)
+      alert('Error generating QR code')
     } finally {
       setIsGenerating(false)
     }
   }
 
   const downloadQR = () => {
-    if (!qrCodeUrl) return
+    if (!qrData) return
     
     const link = document.createElement('a')
-    link.download = `QR-${formData.title || 'code'}.png`
-    link.href = qrCodeUrl
+    link.download = `qr-${formData.title || 'verification'}.png`
+    link.href = qrData.qrCode
     link.click()
   }
 
   const resetForm = () => {
-    setFormData({
-      title: '',
-      clientName: '',
-      vessel: '',
-      quantity: '',
-      portLoading: '',
-      portDischarging: '',
-      wiNumber: '',
-      certificateNumber: '',
-      commodity: '',
-      ashContent: '',
-      totalSulphur: '',
-      calorificValue: ''
-    })
-    setQrCodeUrl('')
-    setGeneratedId('')
+    setQrData(null)
+    setFormData(initialFormData)
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <Toaster position="top-right" />
-      
-      <div className="bg-white rounded-lg shadow-lg p-8">
-        {/* Header dengan navigation */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
-            QR Code Generator
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            QR Code Verification Generator
           </h1>
-          <a
-            href="/dashboard"
-            className="bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 font-medium"
-          >
-            Dashboard
-          </a>
+          <p className="text-gray-600">
+            Generate QR codes untuk verifikasi dokumen dan sertifikat
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form Input */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
               Data Verifikasi
             </h2>
-            
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-800 mb-2">
                 Title *
               </label>
               <input
@@ -172,14 +138,13 @@ export default function QRGenerator() {
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 placeholder="Verification Certificate"
                 required
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-800 mb-2">
                 Client Name *
               </label>
               <input
@@ -187,15 +152,14 @@ export default function QRGenerator() {
                 name="clientName"
                 value={formData.clientName}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 placeholder="PT. TRIYASA PIRSA UTAMA"
                 required
               />
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-800 mb-2">
                   Vessel/TB/BG
                 </label>
                 <input
@@ -203,11 +167,11 @@ export default function QRGenerator() {
                   name="vessel"
                   value={formData.vessel}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-800 mb-2">
                   Quantity
                 </label>
                 <input
@@ -215,14 +179,13 @@ export default function QRGenerator() {
                   name="quantity"
                   value={formData.quantity}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 />
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-800 mb-2">
                   Port of Loading
                 </label>
                 <input
@@ -230,11 +193,11 @@ export default function QRGenerator() {
                   name="portLoading"
                   value={formData.portLoading}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-800 mb-2">
                   Port of Discharging
                 </label>
                 <input
@@ -242,14 +205,13 @@ export default function QRGenerator() {
                   name="portDischarging"
                   value={formData.portDischarging}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 />
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-800 mb-2">
                   WI Number
                 </label>
                 <input
@@ -257,11 +219,11 @@ export default function QRGenerator() {
                   name="wiNumber"
                   value={formData.wiNumber}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-800 mb-2">
                   Certificate Number
                 </label>
                 <input
@@ -269,13 +231,12 @@ export default function QRGenerator() {
                   name="certificateNumber"
                   value={formData.certificateNumber}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 />
               </div>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-800 mb-2">
                 Commodity Branch
               </label>
               <input
@@ -283,13 +244,12 @@ export default function QRGenerator() {
                 name="commodity"
                 value={formData.commodity}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
               />
             </div>
-
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-800 mb-2">
                   Ash Content (adb)
                 </label>
                 <input
@@ -297,11 +257,11 @@ export default function QRGenerator() {
                   name="ashContent"
                   value={formData.ashContent}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-800 mb-2">
                   Total Sulphur (adb)
                 </label>
                 <input
@@ -309,11 +269,11 @@ export default function QRGenerator() {
                   name="totalSulphur"
                   value={formData.totalSulphur}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-800 mb-2">
                   Calorific Value (arb)
                 </label>
                 <input
@@ -321,73 +281,72 @@ export default function QRGenerator() {
                   name="calorificValue"
                   value={formData.calorificValue}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 />
               </div>
             </div>
-
             <div className="flex gap-4 pt-4">
               <button
                 onClick={generateQRCode}
                 disabled={isGenerating}
-                className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 disabled:opacity-50 font-medium"
               >
                 {isGenerating ? 'Generating...' : 'Generate QR Code'}
               </button>
-              
-              <button
-                onClick={resetForm}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-medium"
+              <Link 
+                href="/dashboard"
+                className="bg-gray-600 text-white px-6 py-3 rounded-md hover:bg-gray-700 font-medium"
               >
-                Reset
-              </button>
+                Dashboard
+              </Link>
             </div>
           </div>
 
           {/* QR Code Preview */}
-          <div className="flex flex-col items-center justify-center">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
               QR Code Preview
             </h2>
-            
-            {qrCodeUrl ? (
-              <div className="text-center">
-                <div className="bg-white p-4 rounded-lg border-2 border-gray-200 mb-4">
-                  <Image 
-                    src={qrCodeUrl} 
+            {qrData ? (
+              <div className="text-center space-y-4">
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <img 
+                    src={qrData.qrCode} 
                     alt="QR Code" 
-                    width={256}
-                    height={256}
-                    className="mx-auto"
+                    className="mx-auto border"
                   />
                 </div>
-                
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600">
-                    QR ID: <span className="font-mono">{generatedId}</span>
+                    QR Code berhasil dibuat!
                   </p>
-                  
+                  <p className="text-xs text-gray-500 break-all">
+                    URL: {window.location.origin}/verify/{qrData.id}
+                  </p>
+                </div>
+                <div className="flex gap-2">
                   <button
                     onClick={downloadQR}
-                    className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 font-medium"
+                    className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 font-medium"
                   >
-                    Download QR Code
+                    Download QR
                   </button>
-
-                  {generatedId && (
-                    <a
-                      href={`/verify/${generatedId}`}
-                      target="_blank"
-                      className="w-full bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 font-medium inline-block text-center"
-                    >
-                      Test Verification Page
-                    </a>
-                  )}
+                  <button
+                    onClick={resetForm}
+                    className="flex-1 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 font-medium"
+                  >
+                    Reset
+                  </button>
                 </div>
               </div>
             ) : (
-              <div className="w-64 h-64 border-2 border-dashed border-gray-300 flex items-center justify-center rounded-lg">
-                <p className="text-gray-500">QR Code akan muncul di sini</p>
+              <div className="text-center py-12 text-gray-500">
+                <div className="w-24 h-24 mx-auto mb-4 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <p>QR Code akan muncul di sini setelah form diisi dan di-generate</p>
               </div>
             )}
           </div>
