@@ -141,14 +141,14 @@ export default function VerifyPage() {
           {/* Company Info */}
           <div className="bg-white px-6 py-10 border-b">
             <div className="text-center">
+              <div className="w-12 h-12 bg-white rounded mx-auto mb-2 flex items-center justify-center">
                 <Image 
                   src="/logo.png" 
-                  alt="Logo" 
-                  width={48} 
-                  height={48}
+                  alt="Logo"
                   priority
                   className="object-contain"
                 />
+              </div>
               <div>
                 <h3 className="text-xl font-bold text-green-600 mb-2">
                   PT TRIYASA PIRSA UTAMA
