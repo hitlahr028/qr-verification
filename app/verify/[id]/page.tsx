@@ -2,6 +2,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import Image from 'next/image'
+
 
 interface QRData {
   title: string
@@ -130,13 +132,9 @@ export default function VerifyPage() {
     <div className="min-h-screen bg-gradient-to-b from-teal-50 to-teal-100">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          
-          {/* Header dengan Checkmark */}
           <div className="bg-teal-500 rounded-t-lg p-6 text-center">
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
+              <Image src="/logo.png" alt="Logo" width={80} height={80} />
             </div>
             <h1 className="text-2xl font-bold text-white mb-2">
               VALID VERIFICATION CODE
