@@ -11,9 +11,9 @@ interface FormData {
   quantity: string
   portLoading: string
   portDischarging: string
-  wiNumber: string
   certificateNumber: string
   commodity: string
+  branch: string
   ashContent: string
   totalSulphur: string
   calorificValue: string
@@ -26,9 +26,9 @@ const initialFormData: FormData = {
   quantity: '',
   portLoading: '',
   portDischarging: '',
-  wiNumber: '',
   certificateNumber: '',
   commodity: '',
+  branch: '',
   ashContent: '',
   totalSulphur: '',
   calorificValue: ''
@@ -209,19 +209,7 @@ export default function QRGenerator() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-800 mb-2">
-                  WI Number
-                </label>
-                <input
-                  type="text"
-                  name="wiNumber"
-                  value={formData.wiNumber}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-                />
-              </div>
+            <div className="grid gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-800 mb-2">
                   Certificate Number
@@ -236,16 +224,32 @@ export default function QRGenerator() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-800 mb-2">
-                Commodity Branch
-              </label>
-              <input
-                type="text"
-                name="commodity"
-                value={formData.commodity}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-              />
+              <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-2">
+                  Commodity
+                </label>
+                <input
+                  type="text"
+                  name="commodity"
+                  value={formData.commodity}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-2">
+                  Branch
+                </label>
+                <input
+                  type="text"
+                  name="branch"
+                  value={formData.branch}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                />
+              </div>
+            </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>

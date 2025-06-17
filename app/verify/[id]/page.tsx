@@ -10,9 +10,9 @@ interface QRData {
   quantity: string
   portLoading: string
   portDischarging: string
-  wiNumber: string
   certificateNumber: string
   commodity: string
+  branch: string
   ashContent: string
   totalSulphur: string
   calorificValue: string
@@ -150,12 +150,6 @@ export default function VerifyPage() {
                 <span className="text-white font-bold text-sm">T</span>
               </div>
               <h2 className="text-lg font-bold text-gray-800">{qrData.client_name}</h2>
-              <p className="text-sm text-gray-600 mt-2">
-                The following details are confirmed by:
-              </p>
-              <p className="text-sm font-medium text-blue-600">
-                SYSTEMCENTER.ID/TRIYASA
-              </p>
             </div>
           </div>
 
@@ -196,13 +190,6 @@ export default function VerifyPage() {
                 </div>
               )}
 
-              {data.wiNumber && (
-                <div className="px-6 py-3 flex justify-between">
-                  <span className="text-teal-600 font-medium">WI NUMBER</span>
-                  <span className="text-gray-800">{data.wiNumber}</span>
-                </div>
-              )}
-
               {data.certificateNumber && (
                 <div className="px-6 py-3 flex justify-between">
                   <span className="text-teal-600 font-medium">CERTIFICATE NUMBER</span>
@@ -212,8 +199,14 @@ export default function VerifyPage() {
 
               {data.commodity && (
                 <div className="px-6 py-3 flex justify-between">
-                  <span className="text-teal-600 font-medium">COMMODITY BRANCH</span>
+                  <span className="text-teal-600 font-medium">COMMODITY</span>
                   <span className="text-gray-800">{data.commodity}</span>
+                </div>
+              )}
+              {data.branch && (
+                <div className="px-6 py-3 flex justify-between">
+                  <span className="text-teal-600 font-medium">BRANCH</span>
+                  <span className="text-gray-800">{data.branch}</span>
                 </div>
               )}
 
@@ -248,17 +241,6 @@ export default function VerifyPage() {
               )}
             </div>
           </div>
-
-          {/* Footer */}
-          <div className="bg-white rounded-b-lg px-6 py-4 text-center border-t">
-            <p className="text-xs text-gray-500">
-              © Copyright 2024 PT Mandiri Cipta Dwipangga
-            </p>
-            <p className="text-xs text-gray-400 mt-1">
-              Verified at: {new Date().toLocaleString('id-ID')}
-            </p>
-          </div>
-
         </div>
       </div>
     </div>
