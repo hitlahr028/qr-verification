@@ -1,34 +1,52 @@
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 
-export async function middleware(request: NextRequest) {
+export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
-  const pathname = request.nextUrl.pathname
+  
+  // Skip middleware for static files
+  if (
+    req.nextUrl.pathname.startsWith('/_next/') ||
+    req.nextUrl.pathname.startsWith('/api/') ||
+    req.nextUrl.pathname.startsWith('/static/') ||
+    req.nextUrl.pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|css|js|woff|woff2|ttf|eot)$/)
+  ) {
+    return res
+  }
 
-  // Public routes that don't require authentication
-  const publicRoutes = ['/login']
-  const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/verify/')
+  // Skip middleware for public routes
+  const publicRoutes = ['/login', '/verify']
+  const isPublicRoute = publicRoutes.some(route => 
+    req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(`${route}/`)
+  )
 
-  // Skip auth check for public routes
   if (isPublicRoute) {
     return res
   }
 
-  // Create a Supabase client configured to use cookies
-  const supabase = createMiddlewareClient({ req: request, res })
-
-  // Refresh session if expired - required for Server Components
+  const supabase = createMiddlewareClient({ req, res })
   const { data: { session } } = await supabase.auth.getSession()
 
-  // If no session and trying to access protected route, redirect to login
-  if (!session) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  // Redirect to login if no session and trying to access protected route
+  if (!session && !isPublicRoute) {
+    const redirectUrl = req.nextUrl.clone()
+    redirectUrl.pathname = '/login'
+    return NextResponse.redirect(redirectUrl)
   }
 
   return res
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    '/logo.png',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
 }
