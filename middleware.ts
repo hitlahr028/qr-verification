@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/register', '/reset-password']
+  const publicRoutes = ['/login']
   const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/verify/')
 
   // Skip auth check for public routes

@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 
 export default function LoginPage() {
@@ -55,7 +54,7 @@ export default function LoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black bg-white"
                     placeholder="Enter your email"
                   />
                 </div>
@@ -77,7 +76,7 @@ export default function LoginPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black bg-white"
                     placeholder="Enter your password"
                   />
                   <button
@@ -95,15 +94,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <Link
-                href="/reset-password"
-                className="text-sm text-blue-600 hover:text-blue-500"
-              >
-                Forgot your password?
-              </Link>
-            </div>
-
             <button
               type="submit"
               disabled={loading}
@@ -118,18 +108,6 @@ export default function LoginPage() {
                 'Sign In'
               )}
             </button>
-
-            <div className="text-center">
-              <span className="text-sm text-gray-600">
-                Don't have an account?{' '}
-                <Link
-                  href="/register"
-                  className="font-medium text-blue-600 hover:text-blue-500"
-                >
-                  Sign up
-                </Link>
-              </span>
-            </div>
           </form>
         </div>
       </div>
