@@ -1,11 +1,13 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import QRCode from 'qrcode'
 import Image from 'next/image'
+import { LogOut, User } from 'lucide-react'
 
-interface QRCodeData {  // Ubah nama dari QRCode menjadi QRCodeData
+interface QRCodeData {
   id: string
   title: string
   client_name: string
@@ -37,6 +39,7 @@ interface Stats {
 }
 
 export default function Dashboard() {
+  const { user, signOut } = useAuth()
   const [qrCodes, setQrCodes] = useState<QRCodeData[]>([])
   const [verifications, setVerifications] = useState<Verification[]>([])
   const [stats, setStats] = useState<Stats>({
@@ -47,7 +50,6 @@ export default function Dashboard() {
   })
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'qrcodes' | 'verifications'>('qrcodes')
-
 
   const loadQRCodes = useCallback(async () => {
     const { data, error } = await supabase
@@ -129,35 +131,29 @@ export default function Dashboard() {
     const { count: todayVerif } = await supabase
       .from('verifications')
       .select('*', { count: 'exact', head: true })
-      .gte('scanned_at', `${today}T00:00:00`)
-      .lt('scanned_at', `${today}T23:59:59`)
+      .gte('scanned_at', today)
 
     setStats({
       totalQRCodes: totalQR || 0,
+      activeQRCodes: activeQR || 0,
       totalVerifications: totalVerif || 0,
-      todayVerifications: todayVerif || 0,
-      activeQRCodes: activeQR || 0
+      todayVerifications: todayVerif || 0
     })
   }, [])
 
-  const loadDashboardData = useCallback(async () => {
-    setLoading(true)
-    try {
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true)
       await Promise.all([
         loadQRCodes(),
         loadVerifications(),
         loadStats()
       ])
-    } catch (error) {
-      console.error('Error loading dashboard:', error)
-    } finally {
       setLoading(false)
     }
-  }, [loadQRCodes, loadVerifications, loadStats])
 
-  useEffect(() => {
-    loadDashboardData()
-  }, [loadDashboardData])
+    loadData()
+  }, [loadQRCodes, loadVerifications, loadStats])
 
   const toggleQRStatus = async (id: string, currentStatus: boolean) => {
     const { error } = await supabase
@@ -171,7 +167,6 @@ export default function Dashboard() {
     }
   }
 
-  // Tambah fungsi download QR code
   const downloadQRCode = (qrCodeImage: string, title: string) => {
     const link = document.createElement('a')
     link.download = `qr-${title}.png`
@@ -269,7 +264,11 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <p className="text-gray-600 mt-1">Kelola QR Code dan pantau verifikasi</p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <User className="h-4 w-4" />
+              <span>{user?.email}</span>
+            </div>
             <button
               onClick={exportData}
               className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 font-medium"
@@ -282,6 +281,13 @@ export default function Dashboard() {
             >
               Buat QR Baru
             </Link>
+            <button
+              onClick={signOut}
+              className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 font-medium"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Logout</span>
+            </button>
           </div>
         </div>
 
@@ -291,7 +297,7 @@ export default function Dashboard() {
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
               </div>
               <div className="ml-4">
@@ -345,16 +351,16 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Main Content */}
         <div className="bg-white rounded-lg shadow">
           <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
+            <nav className="flex space-x-8 px-6" aria-label="Tabs">
               <button
                 onClick={() => setActiveTab('qrcodes')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'qrcodes'
                     ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 QR Codes ({qrCodes.length})
@@ -364,7 +370,7 @@ export default function Dashboard() {
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'verifications'
                     ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 Riwayat Verifikasi ({verifications.length})
@@ -414,8 +420,8 @@ export default function Dashboard() {
                                 <Image 
                                   src={qr.qr_code_image} 
                                   alt="QR Code" 
-                                  width={48}
-                                  height={48}
+                                  width={40} 
+                                  height={40}
                                   className="border rounded"
                                 />
                                 <button
@@ -423,6 +429,12 @@ export default function Dashboard() {
                                   className="text-blue-600 hover:text-blue-900 text-sm"
                                 >
                                   Download
+                                </button>
+                                <button
+                                  onClick={() => regenerateQRCode(qr.id)}
+                                  className="text-green-600 hover:text-green-900 text-sm"
+                                >
+                                  Regenerate
                                 </button>
                               </>
                             ) : (
@@ -439,7 +451,7 @@ export default function Dashboard() {
                           <div className="text-sm text-gray-900">{qr.client_name}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500">{formatDate(qr.created_at)}</div>
+                          <div className="text-sm text-gray-900">{formatDate(qr.created_at)}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -513,7 +525,7 @@ export default function Dashboard() {
                           <div className="text-sm text-gray-900">{verification.qr_codes?.client_name}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500">{verification.ip_address}</div>
+                          <div className="text-sm text-gray-900">{verification.ip_address}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">

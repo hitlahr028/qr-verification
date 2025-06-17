@@ -133,13 +133,13 @@ export default function VerifyPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="bg-green-600 rounded-t-lg p-6 text-center">
-            <h1 className="text-2xl font-bold text-white mb-2">
+            <h1 className="text-xl font-bold text-white mb-2">
               VALID VERIFICATION CODE
             </h1>
           </div>
 
           {/* Company Info */}
-          <div className="bg-white px-6 py-4 border-b">
+          <div className="bg-white px-6 py-10 border-b">
             <div className="text-center">
               <div className="w-12 h-12 bg-white rounded mx-auto mb-2 flex items-center justify-center">
                   <Image src="/logo.png" alt="Logo" width={64} height={64} />
@@ -153,7 +153,7 @@ export default function VerifyPage() {
           </div>
 
           {/* Verification Details */}
-          <div className="bg-white rounded-b-lg px-8 py-20">
+          <div className="bg-slate-50 rounded-b-lg px-8 pb-20 pt-5">
             <div className="grid grid-cols-1 divide-y divide-gray-200">
               
               <div className="px-6 py-3 flex justify-between">
