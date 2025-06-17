@@ -11,6 +11,7 @@ interface QRCode {
   is_active: boolean
   verification_count: number
   verifications: { count: number }[]
+  qr_code_image?: string // Tambah field ini
 }
 
 interface Verification {
@@ -54,6 +55,7 @@ export default function Dashboard() {
         client_name,
         created_at,
         is_active,
+        qr_code_image,
         verifications(count)
       `)
       .order('created_at', { ascending: false })
@@ -163,6 +165,39 @@ export default function Dashboard() {
     if (!error) {
       loadQRCodes()
       loadStats()
+    }
+  }
+
+  // Tambah fungsi download QR code
+  const downloadQRCode = (qrCodeImage: string, title: string) => {
+    const link = document.createElement('a')
+    link.download = `qr-${title}.png`
+    link.href = qrCodeImage
+    link.click()
+  }
+
+  const regenerateQRCode = async (qrId: string) => {
+    try {
+      const qrCodeUrl = `${window.location.origin}/verify/${qrId}`
+      const qrCodeDataUrl = await QRCode.toDataURL(qrCodeUrl, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      })
+
+      const { error } = await supabase
+        .from('qr_codes')
+        .update({ qr_code_image: qrCodeDataUrl })
+        .eq('id', qrId)
+
+      if (!error) {
+        loadQRCodes()
+      }
+    } catch (error) {
+      console.error('Error regenerating QR code:', error)
     }
   }
 
@@ -344,6 +379,9 @@ export default function Dashboard() {
                         Title
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        QR Code
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Client
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -365,6 +403,32 @@ export default function Dashboard() {
                       <tr key={qr.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{qr.title}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center space-x-2">
+                            {qr.qr_code_image ? (
+                              <>
+                                <img 
+                                  src={qr.qr_code_image} 
+                                  alt="QR Code" 
+                                  className="w-12 h-12 border rounded"
+                                />
+                                <button
+                                  onClick={() => downloadQRCode(qr.qr_code_image!, qr.title)}
+                                  className="text-blue-600 hover:text-blue-900 text-sm"
+                                >
+                                  Download
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                onClick={() => regenerateQRCode(qr.id)}
+                                className="text-green-600 hover:text-green-900 text-sm"
+                              >
+                                Generate QR
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{qr.client_name}</div>

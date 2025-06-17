@@ -132,17 +132,28 @@ export default function VerifyPage() {
     <div className="min-h-screen bg-gradient-to-b from-teal-50 to-teal-100">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-teal-500 rounded-t-lg p-6 text-center">
-            <div className="flex items-center justify-center mx-auto mb-4">
-              <Image src="/logo.png" alt="Logo" width={64} height={64} />
-            </div>
+          <div className="bg-green-600 rounded-t-lg p-6 text-center">
             <h1 className="text-2xl font-bold text-white mb-2">
               VALID VERIFICATION CODE
             </h1>
           </div>
 
+          {/* Company Info */}
+          <div className="bg-white px-6 py-4 border-b">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-white rounded mx-auto mb-2 flex items-center justify-center">
+                  <Image src="/logo.png" alt="Logo" width={64} height={64} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-green-600 mb-2">
+                  PT TRIYASA PIRSA UTAMA
+                </h3>
+              </div>
+            </div>
+          </div>
+
           {/* Verification Details */}
-          <div className="bg-white">
+          <div className="bg-white rounded-b-lg px-8 py-20">
             <div className="grid grid-cols-1 divide-y divide-gray-200">
               
               <div className="px-6 py-3 flex justify-between">
@@ -201,7 +212,7 @@ export default function VerifyPage() {
               {/* Parameter Results Section */}
               {(data.ashContent || data.totalSulphur || data.calorificValue) && (
                 <>
-                  <div className="px-6 py-3 bg-gray-50">
+                  <div className="px-6 py-3 bg-gray-100">
                     <span className="text-gray-800 font-bold">PARAMETER RESULT</span>
                   </div>
 

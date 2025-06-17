@@ -55,24 +55,9 @@ export default function QRGenerator() {
     setIsGenerating(true)
     
     try {
-      // Simpan data ke Supabase
-      const { data, error } = await supabase
-        .from('qr_codes')
-        .insert([
-          {
-            title: formData.title,
-            client_name: formData.clientName,
-            data: formData,
-            is_active: true
-          }
-        ])
-        .select()
-        .single()
-
-      if (error) throw error
-
-      // Generate QR Code
-      const qrCodeUrl = `${window.location.origin}/verify/${data.id}`
+      // Generate QR Code terlebih dahulu
+      const tempId = crypto.randomUUID() // Generate temporary ID for QR URL
+      const qrCodeUrl = `${window.location.origin}/verify/${tempId}`
       const qrCodeDataUrl = await QRCode.toDataURL(qrCodeUrl, {
         width: 300,
         margin: 2,
@@ -81,6 +66,24 @@ export default function QRGenerator() {
           light: '#FFFFFF'
         }
       })
+
+      // Simpan data ke Supabase dengan QR code image
+      const { data, error } = await supabase
+        .from('qr_codes')
+        .insert([
+          {
+            id: tempId, // Use the same ID we used for QR generation
+            title: formData.title,
+            client_name: formData.clientName,
+            data: formData,
+            qr_code_image: qrCodeDataUrl, // Simpan base64 QR code
+            is_active: true
+          }
+        ])
+        .select()
+        .single()
+
+      if (error) throw error
 
       setQrData({
         id: data.id,
