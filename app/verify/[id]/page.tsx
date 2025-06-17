@@ -133,22 +133,12 @@ export default function VerifyPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="bg-teal-500 rounded-t-lg p-6 text-center">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
-              <Image src="/logo.png" alt="Logo" width={80} height={80} />
+            <div className="flex items-center justify-center mx-auto mb-4">
+              <Image src="/logo.png" alt="Logo" width={64} height={64} />
             </div>
             <h1 className="text-2xl font-bold text-white mb-2">
               VALID VERIFICATION CODE
             </h1>
-          </div>
-
-          {/* Company Info */}
-          <div className="bg-white px-6 py-4 border-b">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-green-600 rounded mx-auto mb-2 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">T</span>
-              </div>
-              <h2 className="text-lg font-bold text-gray-800">{qrData.client_name}</h2>
-            </div>
           </div>
 
           {/* Verification Details */}
