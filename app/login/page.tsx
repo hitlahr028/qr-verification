@@ -9,19 +9,19 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const { signIn, loading } = useAuth()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!email || !password) {
-      return
+        return
     }
 
     try {
-      await signIn(email, password)
-    } catch (error) {
-      // Error handling is done in the context
+        await signIn(email, password)
+    } catch {
+        // Error handling is done in the context
     }
-  }
+    }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
