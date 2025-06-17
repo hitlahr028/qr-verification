@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import QRCode from 'qrcode'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface FormData {
   title: string
@@ -317,9 +318,11 @@ export default function QRGenerator() {
             {qrData ? (
               <div className="text-center space-y-4">
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <img 
+                  <Image 
                     src={qrData.qrCode} 
                     alt="QR Code" 
+                    width={300}
+                    height={300}
                     className="mx-auto border"
                   />
                 </div>

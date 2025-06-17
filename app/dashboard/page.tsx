@@ -2,8 +2,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import QRCode from 'qrcode'
+import Image from 'next/image'
 
-interface QRCode {
+interface QRCodeData {  // Ubah nama dari QRCode menjadi QRCodeData
   id: string
   title: string
   client_name: string
@@ -11,7 +13,7 @@ interface QRCode {
   is_active: boolean
   verification_count: number
   verifications: { count: number }[]
-  qr_code_image?: string // Tambah field ini
+  qr_code_image?: string
 }
 
 interface Verification {
@@ -35,7 +37,7 @@ interface Stats {
 }
 
 export default function Dashboard() {
-  const [qrCodes, setQrCodes] = useState<QRCode[]>([])
+  const [qrCodes, setQrCodes] = useState<QRCodeData[]>([])
   const [verifications, setVerifications] = useState<Verification[]>([])
   const [stats, setStats] = useState<Stats>({
     totalQRCodes: 0,
@@ -45,6 +47,7 @@ export default function Dashboard() {
   })
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'qrcodes' | 'verifications'>('qrcodes')
+
 
   const loadQRCodes = useCallback(async () => {
     const { data, error } = await supabase
@@ -408,10 +411,12 @@ export default function Dashboard() {
                           <div className="flex items-center space-x-2">
                             {qr.qr_code_image ? (
                               <>
-                                <img 
+                                <Image 
                                   src={qr.qr_code_image} 
                                   alt="QR Code" 
-                                  className="w-12 h-12 border rounded"
+                                  width={48}
+                                  height={48}
+                                  className="border rounded"
                                 />
                                 <button
                                   onClick={() => downloadQRCode(qr.qr_code_image!, qr.title)}
