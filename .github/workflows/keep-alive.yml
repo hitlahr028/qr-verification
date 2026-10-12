@@ -1,0 +1,36 @@
+name: Supabase Keep Alive
+
+on:
+  schedule:
+    # Run every 2 days at 00:00 UTC (well within Supabase's 7-day inactivity limit)
+    - cron: '0 0 */2 * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions
+
+jobs:
+  ping:
+    name: Ping Health Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Keep-Alive Endpoint
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          # Use APP_URL secret if set, otherwise replace with your Vercel URL
+          TARGET_URL="${APP_URL:-https://qr-verification.vercel.app/api/health}"
+
+          echo "Pinging health endpoint: $TARGET_URL"
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "$TARGET_URL")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "HTTP Status Code: $HTTP_CODE"
+          echo "Response Body: $BODY"
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Keep-alive ping succeeded!"
+            exit 0
+          else
+            echo "❌ Keep-alive ping failed or returned error status."
+            exit 1
+          fi
