@@ -15,8 +15,8 @@ jobs:
         env:
           APP_URL: ${{ secrets.APP_URL }}
         run: |
-          # Use APP_URL secret if set, otherwise replace with your Vercel URL
-          TARGET_URL="${APP_URL:-https://qr-verification.vercel.app/api/health}"
+          # Use APP_URL secret if set, otherwise fallback to deployed URL
+          TARGET_URL="${APP_URL:-https://qr-verification-gamma.vercel.app/api/health}"
 
           echo "Pinging health endpoint: $TARGET_URL"
 

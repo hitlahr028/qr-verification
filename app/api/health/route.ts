@@ -6,24 +6,20 @@ export const revalidate = 0
 
 export async function GET() {
   try {
-    const startTime = Date.now()
-
-    // Query Supabase to trigger activity and prevent auto-pause
-    const { error } = await supabase
+    // Query Supabase to trigger activity, prevent auto-pause, and count total QR codes
+    const { count, error } = await supabase
       .from('qr_codes')
-      .select('id')
+      .select('id', { count: 'exact' })
       .limit(1)
-
-    const responseTimeMs = Date.now() - startTime
 
     if (error) {
       console.error('Supabase health check error:', error)
       return NextResponse.json(
         {
           status: 'error',
-          message: 'Supabase ping failed. Please ensure the project is active and not paused in Supabase Dashboard.',
+          database: 'disconnected',
+          driver: 'pgsql',
           error: error.message,
-          responseTimeMs,
           timestamp: new Date().toISOString(),
         },
         {
@@ -38,8 +34,9 @@ export async function GET() {
     return NextResponse.json(
       {
         status: 'ok',
-        message: 'Supabase keep-alive ping successful',
-        responseTimeMs,
+        database: 'connected',
+        driver: 'pgsql',
+        total_qr: count ?? 0,
         timestamp: new Date().toISOString(),
       },
       {
@@ -55,7 +52,9 @@ export async function GET() {
     return NextResponse.json(
       {
         status: 'error',
-        message: errorMessage,
+        database: 'disconnected',
+        driver: 'pgsql',
+        error: errorMessage,
         timestamp: new Date().toISOString(),
       },
       {
@@ -67,3 +66,4 @@ export async function GET() {
     )
   }
 }
+
